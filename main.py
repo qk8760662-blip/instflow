@@ -1,13 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import httpx
-import os
 
 app = FastAPI(title="InstFlow - Angel One Proxy")
 
-# Allow all origins so your HTML file can connect
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,15 +26,13 @@ class QuoteData(BaseModel):
     exchangeTokens: dict
     mode: str = "FULL"
 
-class OIData(BaseModel):
-    token: str
-    exchange: str
-    symboltoken: str
-    expirydate: str
-
 @app.get("/")
 def root():
-    return {"status": "InstFlow Live Server Running", "version": "1.0"}
+    return {"status": "InstFlow Live Server Running"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 @app.post("/login")
 async def login(data: LoginData):
@@ -57,8 +52,9 @@ async def login(data: LoginData):
         "totp": data.totp
     }
     async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.post(f"{BASE}/rest/auth/angelbroking/user/v1/loginByPassword",
-                                  headers=headers, json=body)
+        resp = await client.post(
+            f"{BASE}/rest/auth/angelbroking/user/v1/loginByPassword",
+            headers=headers, json=body)
         return resp.json()
 
 @app.post("/quote")
@@ -75,10 +71,7 @@ async def quote(data: QuoteData):
     }
     body = {"mode": data.mode, "exchangeTokens": data.exchangeTokens}
     async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.post(f"{BASE}/rest/secure/angelbroking/market/v1/quote/",
-                                  headers=headers, json=body)
+        resp = await client.post(
+            f"{BASE}/rest/secure/angelbroking/market/v1/quote/",
+            headers=headers, json=body)
         return resp.json()
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
