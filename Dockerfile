@@ -1,6 +1,5 @@
 FROM python:3.11-slim
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install fastapi uvicorn httpx pydantic
+RUN pip install fastapi uvicorn httpx
 COPY main.py .
-CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
